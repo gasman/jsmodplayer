@@ -185,8 +185,9 @@ function ModPlayer(mod, rate) {
 						if (channels[chan].samplePosition >= channels[chan].sample.length) {
 							channels[chan].playing = false;
 							break;
+						} else if (channels[chan].sample.repeatLength > 2 && channels[chan].samplePosition >= channels[chan].sample.repeatOffset + channels[chan].sample.repeatLength) {
+							channels[chan].samplePosition = channels[chan].sample.repeatOffset;
 						}
-						/* TODO: check for looping */
 						channels[chan].ticksSinceStartOfSample -= channels[chan].ticksPerSample;
 					}
 					if (channels[chan].playing) {

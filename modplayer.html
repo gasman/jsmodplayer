@@ -9,6 +9,7 @@
 		
 		<script type="text/javascript">
 			var modFile = new ModFile(mod);
+			console.log(modFile);
 			var modPlayer = new ModPlayer(modFile, 44100);
 			var dynamicAudio;
 			
@@ -16,12 +17,26 @@
 				dynamicAudio = new DynamicAudio({'swf': 'dynamicaudio.swf'});
 			}
 			
+			var playing = false;
 			function play() {
-				dynamicAudio.write(modPlayer.getSamples(880000));
+				playing = true;
+				bufferMoreData();
+			}
+			
+			function bufferMoreData() {
+				if (playing) {
+					dynamicAudio.write(modPlayer.getSamples(882000));
+					setTimeout(bufferMoreData, 9900);
+				}
+			}
+			
+			function stop() {
+				playing = false;
 			}
 		</script>
 	</head>
 	<body onload="init()">
 		<button onclick="play()">play</button>
+		<button onclick="stop()">stop</button>
 	</body>
 </html>
