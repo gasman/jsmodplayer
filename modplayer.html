@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<script type="text/javascript" src="modfile.js"></script>
+		<script type="text/javascript" src="modplayer.js"></script>
+		<script type="text/javascript" src="dynamicaudio-min.js"></script>
+		
+		<script type="text/javascript" src="sundance.mod.js"></script>
+		
+		<script type="text/javascript">
+			var modFile = new ModFile(mod);
+			var modPlayer = new ModPlayer(modFile, 44100);
+			var dynamicAudio;
+			
+			function init() {
+				dynamicAudio = new DynamicAudio({'swf': 'dynamicaudio.swf'});
+			}
+			
+			function play() {
+				dynamicAudio.write(modPlayer.getSamples(880000));
+			}
+		</script>
+	</head>
+	<body onload="init()">
+		<button onclick="play()">play</button>
+	</body>
+</html>
