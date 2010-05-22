@@ -43,27 +43,21 @@ function ModFile(mod) {
 	}
 	
 	var identifier = mod.substr(1080, 4);
-	switch(identifier) {
-		case '2CHN':
-			this.channelCount = 2;
-			break;
-		case 'M.K.':
-		case 'FLT4':
-		case 'M!K!':
-		case '4CHN':
-			this.channelCount = 4;
-			break;
-		case '6CHN':
-			this.channelCount = 6;
-			break;
-		case '8CHN':
-		case 'OCTA':
-		case 'CD81':
-			this.channelCount = 8;
-			break;
-		default:
-			console.log("Warning: unknown identifier " + identifier + ". Assuming 4 channels.");
-			this.channelCount = 4;
+	
+	var channelCountByIdentifier = {
+		'TDZ1': 1, '1CHN': 1, 'TDZ2': 2, '2CHN': 2, 'TDZ3': 3, '3CHN': 3,
+		'M.K.': 4, 'FLT4': 4, 'M!K!': 4, '4CHN': 4, 'TDZ4': 4, '5CHN': 5, 'TDZ5': 5,
+		'6CHN': 6, 'TDZ6': 6, '7CHN': 7, 'TDZ7': 7, '8CHN': 8, 'TDZ8': 8, 'OCTA': 8, 'CD81': 8,
+		'9CHN': 9, 'TDZ9': 9,
+		'10CH': 10, '11CH': 11, '12CH': 12, '13CH': 13, '14CH': 14, '15CH': 15, '16CH': 16, '17CH': 17,
+		'18CH': 18, '19CH': 19, '20CH': 20, '21CH': 21, '22CH': 22, '23CH': 23, '24CH': 24, '25CH': 25,
+		'26CH': 26, '27CH': 27, '28CH': 28, '29CH': 29, '30CH': 30, '31CH': 31, '32CH': 32
+	}
+	
+	this.channelCount = channelCountByIdentifier[identifier];
+	if (!this.channelCount) {
+		//console.log("Warning: unknown identifier " + identifier + ". Assuming 4 channels.");
+		this.channelCount = 4;
 	}
 	
 	var patternOffset = 1084;

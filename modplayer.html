@@ -5,12 +5,8 @@
 		<script type="text/javascript" src="modplayer.js"></script>
 		<script type="text/javascript" src="dynamicaudio-min.js"></script>
 		
-		<script type="text/javascript" src="mods/ambpower.mod.js"></script>
-		
 		<script type="text/javascript">
-			var modFile = new ModFile(mod);
-			//console.log(modFile);
-			var modPlayer = new ModPlayer(modFile, 44100);
+			var modPlayer;
 			var dynamicAudio;
 			
 			function init() {
@@ -20,6 +16,7 @@
 			var playing = false;
 			function play() {
 				playing = true;
+				// initially buffer 10 seconds (44100 * 2(stereo) * 10)
 				dynamicAudio.write(modPlayer.getSamples(882000));
 				bufferMoreData();
 			}
@@ -34,10 +31,44 @@
 			function stop() {
 				playing = false;
 			}
+			
+			function loadRemote(path) {
+				var fetch = new XMLHttpRequest();
+				fetch.open('GET', path);
+				fetch.overrideMimeType("text/plain; charset=x-user-defined");
+				fetch.onreadystatechange = function() {
+					if(this.readyState == 4 && this.status == 200) {
+						/* munge response into a binary string */
+						var t = this.responseText || "" ;
+						var ff = [];
+						var mx = t.length;
+						var scc= String.fromCharCode;
+						for (var z = 0; z < mx; z++) {
+							ff[z] = scc(t.charCodeAt(z) & 255);
+						}
+						var binString = ff.join("");
+						
+						var modFile = new ModFile(binString);
+						//console.log(modFile);
+						//var modFile = new ModFile(mod);
+						modPlayer = new ModPlayer(modFile, 44100);
+						play();
+						document.getElementById('status').innerText = '';
+					}
+				}
+				document.getElementById('status').innerText = 'loading...';
+				fetch.send();
+			}
 		</script>
 	</head>
 	<body onload="init()">
-		<button onclick="play()">play</button>
+		<ul>
+			<li><a href="javascript:loadRemote('mods/ambpower.mod')">Ambient Power (Vogue / Triton)</a></li>
+			<li><a href="javascript:loadRemote('mods/dope.mod')">Dope / Onward Ride (Jugi / Complex)</a></li>
+			<li><a href="javascript:loadRemote('mods/mindkick.mod')">Mindkick (Mindfuck / Mentasm)</a></li>
+			<li><a href="javascript:loadRemote('mods/sundance.mod')">Sundance (Purple Motion / Future Crew)</a></li>
+		</ul>
 		<button onclick="stop()">stop</button>
+		<div id="status"></div>
 	</body>
 </html>
