@@ -116,6 +116,7 @@ function ModPlayer(mod, rate) {
 		channels[chan] = {
 			playing: false,
 			sample: mod.samples[0],
+			finetune: 0,
 			volume: 0,
 			volumeDelta: 0,
 			periodDelta: 0,
@@ -135,10 +136,11 @@ function ModPlayer(mod, rate) {
 				if (note.sample != 0) {
 					channels[chan].sample = mod.samples[note.sample - 1];
 					channels[chan].volume = channels[chan].sample.volume;
+					channels[chan].finetune = channels[chan].sample.finetune;
 				}
 				if (note.period != 0) {
-					channels[chan].ticksPerSample = note.period * 2;
 					channels[chan].noteNumber = ModPeriodToNoteNumber[note.period];
+					channels[chan].ticksPerSample = ModPeriodTable[channels[chan].finetune][channels[chan].noteNumber] * 2;
 				}
 			}
 			if (note.effect != 0 || note.effectParameter != 0) {
@@ -238,7 +240,7 @@ function ModPlayer(mod, rate) {
 			if (channels[chan].arpeggioActive) {
 				channels[chan].arpeggioCounter++;
 				var noteNumber = channels[chan].arpeggioNotes[channels[chan].arpeggioCounter % 3];
-				channels[chan].ticksPerSample = ModPeriodTable[0][noteNumber] * 2;
+				channels[chan].ticksPerSample = ModPeriodTable[channels[chan].finetune][noteNumber] * 2;
 			}
 		}
 		
