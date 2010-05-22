@@ -110,7 +110,9 @@ function ModPlayer(mod, rate) {
 	for (var chan = 0; chan < mod.channelCount; chan++) {
 		channels[chan] = {
 			playing: false,
-			sample: null
+			sample: null,
+			volume: 0,
+			volumeDelta: 0
 		};
 	}
 	
@@ -128,22 +130,34 @@ function ModPlayer(mod, rate) {
 					channels[chan].ticksSinceStartOfSample = 0; /* that's 'sample' as in 'individual volume reading' */
 					channels[chan].volume = channels[chan].sample.volume;
 				}
-				switch (note.effect) {
-					case 0x0c: /* volume */
-						if (note.effectParameter > 64) {
-							channels[chan].volume = 64;
-						} else {
-							channels[chan].volume = note.effectParameter;
-						}
-						break;
-					case 0x0f: /* tempo change */
-						if (note.effectParameter == 0) {
-						} else if (note.effectParameter <= 32) {
-							framesPerRow = note.effectParameter;
-						} else {
-							/* TODO: crazy BPM setting */
-						}
-						break;
+				if (note.effect != 0) {
+					channels[chan].volumeDelta = 0; /* new effects cancel volumeDelta */
+					switch (note.effect) {
+						case 0x0a: /* volume slide - Axy */
+							if (note.effectParameter & 0xf0) {
+								/* volume increase by x */
+								channels[chan].volumeDelta = note.effectParameter >> 4;
+							} else {
+								/* volume decrease by y */
+								channels[chan].volumeDelta = -note.effectParameter;
+							}
+							break;
+						case 0x0c: /* volume */
+							if (note.effectParameter > 64) {
+								channels[chan].volume = 64;
+							} else {
+								channels[chan].volume = note.effectParameter;
+							}
+							break;
+						case 0x0f: /* tempo change */
+							if (note.effectParameter == 0) {
+							} else if (note.effectParameter <= 32) {
+								framesPerRow = note.effectParameter;
+							} else {
+								/* TODO: crazy BPM setting */
+							}
+							break;
+					}
 				}
 			}
 		}
@@ -179,6 +193,17 @@ function ModPlayer(mod, rate) {
 	
 	function doFrame() {
 		currentFrame++;
+		/* apply volume slide before fetching row, because the first frame of a row does NOT
+		have the slide applied */
+		for (var chan = 0; chan < mod.channelCount; chan++) {
+			channels[chan].volume += channels[chan].volumeDelta;
+			if (channels[chan].volume > 64) {
+				channels[chan].volume = 64;
+			} else if (channels[chan].volume < 0) {
+				channels[chan].volume = 0;
+			}
+		}
+		
 		if (currentFrame == framesPerRow) {
 			getNextRow();
 		}
