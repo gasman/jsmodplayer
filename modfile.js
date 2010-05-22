@@ -77,8 +77,8 @@ function ModFile(mod) {
 				b2 = mod.charCodeAt(patternOffset + 2);
 				b3 = mod.charCodeAt(patternOffset + 3);
 				this.patterns[pat][row][chan] = {
-					sample: (b0 & 0xf0) || (b2 >> 4),
-					period: ((b0 & 0x0f) << 8) || b1,
+					sample: (b0 & 0xf0) | (b2 >> 4),
+					period: ((b0 & 0x0f) << 8) | b1,
 					effect: b2 & 0x0f,
 					effectParameter: b3
 				};

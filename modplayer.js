@@ -126,6 +126,24 @@ function ModPlayer(mod, rate) {
 					channels[chan].samplePosition = 0;
 					channels[chan].ticksPerSample = note.period * 2;
 					channels[chan].ticksSinceStartOfSample = 0; /* that's 'sample' as in 'individual volume reading' */
+					channels[chan].volume = channels[chan].sample.volume;
+				}
+				switch (note.effect) {
+					case 0x0c: /* volume */
+						if (note.effectParameter > 64) {
+							channels[chan].volume = 64;
+						} else {
+							channels[chan].volume = note.effectParameter;
+						}
+						break;
+					case 0x0f: /* tempo change */
+						if (note.effectParameter == 0) {
+						} else if (note.effectParameter <= 32) {
+							framesPerRow = note.effectParameter;
+						} else {
+							/* TODO: crazy BPM setting */
+						}
+						break;
 				}
 			}
 		}
@@ -184,7 +202,6 @@ function ModPlayer(mod, rate) {
 						channels[chan].samplePosition++;
 						if (channels[chan].samplePosition >= channels[chan].sample.length) {
 							channels[chan].playing = false;
-							break;
 						} else if (channels[chan].sample.repeatLength > 2 && channels[chan].samplePosition >= channels[chan].sample.repeatOffset + channels[chan].sample.repeatLength) {
 							channels[chan].samplePosition = channels[chan].sample.repeatOffset;
 						}
@@ -192,7 +209,7 @@ function ModPlayer(mod, rate) {
 					}
 					if (channels[chan].playing) {
 						var v = mod.data.charCodeAt(channels[chan].sample.startOffset + channels[chan].samplePosition);
-						totalOutputLevel += (((v + 128) & 0xff) - 128);
+						totalOutputLevel += (((v + 128) & 0xff) - 128) * channels[chan].volume / 64;
 					}
 				}
 			}
