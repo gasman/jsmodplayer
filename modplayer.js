@@ -4,7 +4,6 @@ Finetune values are in twos-complement, i.e. [0,1,2,3,4,5,6,7,-8,-7,-6,-5,-4,-3,
 The first table is used to generate a reverse lookup table, to find out the note number
 for a period given in the MOD file.
 */
-/* actually, this isn't used yet... */
 var ModPeriodTable = [
 	[1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960 , 906,
 	 856 , 808 , 762 , 720 , 678 , 640 , 604 , 570 , 538 , 508 , 480 , 453,
@@ -116,10 +115,11 @@ function ModPlayer(mod, rate) {
 	for (var chan = 0; chan < mod.channelCount; chan++) {
 		channels[chan] = {
 			playing: false,
-			sample: null,
+			sample: mod.samples[0],
 			volume: 0,
 			volumeDelta: 0,
-			periodDelta: 0
+			periodDelta: 0,
+			arpeggioActive: false
 		};
 	}
 	
@@ -128,20 +128,33 @@ function ModPlayer(mod, rate) {
 		currentFrame = 0;
 		for (var chan = 0; chan < mod.channelCount; chan++) {
 			var note = currentPattern[currentRow][chan];
-			if (note.period != 0) {
-				if (note.sample != 0) channels[chan].sample = mod.samples[note.sample - 1];
-				if (channels[chan].sample != null) {
-					channels[chan].playing = true;
-					channels[chan].samplePosition = 0;
-					channels[chan].ticksPerSample = note.period * 2;
-					channels[chan].ticksSinceStartOfSample = 0; /* that's 'sample' as in 'individual volume reading' */
+			if (note.period != 0 || note.sample != 0) {
+				channels[chan].playing = true;
+				channels[chan].samplePosition = 0;
+				channels[chan].ticksSinceStartOfSample = 0; /* that's 'sample' as in 'individual volume reading' */
+				if (note.sample != 0) {
+					channels[chan].sample = mod.samples[note.sample - 1];
 					channels[chan].volume = channels[chan].sample.volume;
+				}
+				if (note.period != 0) {
+					channels[chan].ticksPerSample = note.period * 2;
+					channels[chan].noteNumber = ModPeriodToNoteNumber[note.period];
 				}
 			}
 			if (note.effect != 0 || note.effectParameter != 0) {
 				channels[chan].volumeDelta = 0; /* new effects cancel volumeDelta */
 				channels[chan].periodDelta = 0; /* new effects cancel periodDelta */
+				channels[chan].arpeggioActive = false;
 				switch (note.effect) {
+					case 0x00: /* arpeggio: 0xy */
+						channels[chan].arpeggioActive = true;
+						channels[chan].arpeggioNotes = [
+							channels[chan].noteNumber,
+							channels[chan].noteNumber + (note.effectParameter >> 4),
+							channels[chan].noteNumber + (note.effectParameter & 0x0f)
+						]
+						channels[chan].arpeggioCounter = 0;
+						break;
 					case 0x01: /* pitch slide up - 1xx */
 						channels[chan].periodDelta = -note.effectParameter;
 						break;
@@ -221,6 +234,11 @@ function ModPlayer(mod, rate) {
 				channels[chan].ticksPerSample = 4096;
 			} else if (channels[chan].ticksPerSample < 96) { /* equivalent to period 48, a bit higher than the highest note */
 				channels[chan].ticksPerSample = 96;
+			}
+			if (channels[chan].arpeggioActive) {
+				channels[chan].arpeggioCounter++;
+				var noteNumber = channels[chan].arpeggioNotes[channels[chan].arpeggioCounter % 3];
+				channels[chan].ticksPerSample = ModPeriodTable[0][noteNumber] * 2;
 			}
 		}
 		
