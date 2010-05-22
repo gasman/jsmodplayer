@@ -95,9 +95,15 @@ for (var i = 0; i < ModPeriodTable[0].length; i++) {
 function ModPlayer(mod, rate) {
 	/* timing calculations */
 	var ticksPerSecond = 7093789.2; /* PAL frequency */
-	var ticksPerFrame = Math.round(ticksPerSecond / 50);
+	var ticksPerFrame; /* calculated by setBpm */
 	var ticksPerOutputSample = Math.round(ticksPerSecond / rate);
 	var ticksSinceStartOfFrame = 0;
+	
+	function setBpm(bpm) {
+		/* x beats per minute => x*4 rows per minute */
+		ticksPerFrame = Math.round(ticksPerSecond * 2.5/bpm);
+	}
+	setBpm(125);
 	
 	/* initial player state */
 	var framesPerRow = 6;
@@ -113,6 +119,7 @@ function ModPlayer(mod, rate) {
 			sample: null,
 			volume: 0,
 			volumeDelta: 0
+			
 		};
 	}
 	
@@ -130,7 +137,7 @@ function ModPlayer(mod, rate) {
 					channels[chan].ticksSinceStartOfSample = 0; /* that's 'sample' as in 'individual volume reading' */
 					channels[chan].volume = channels[chan].sample.volume;
 				}
-				if (note.effect != 0) {
+				if (note.effect != 0 || note.effectParameter != 0) {
 					channels[chan].volumeDelta = 0; /* new effects cancel volumeDelta */
 					switch (note.effect) {
 						case 0x0a: /* volume slide - Axy */
@@ -154,7 +161,7 @@ function ModPlayer(mod, rate) {
 							} else if (note.effectParameter <= 32) {
 								framesPerRow = note.effectParameter;
 							} else {
-								/* TODO: crazy BPM setting */
+								setBpm(note.effectParameter);
 							}
 							break;
 					}
