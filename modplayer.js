@@ -137,41 +137,41 @@ function ModPlayer(mod, rate) {
 					channels[chan].ticksSinceStartOfSample = 0; /* that's 'sample' as in 'individual volume reading' */
 					channels[chan].volume = channels[chan].sample.volume;
 				}
-				if (note.effect != 0 || note.effectParameter != 0) {
-					channels[chan].volumeDelta = 0; /* new effects cancel volumeDelta */
-					channels[chan].periodDelta = 0; /* new effects cancel periodDelta */
-					switch (note.effect) {
-						case 0x01: /* pitch slide up - 1xx */
-							channels[chan].periodDelta = -note.effectParameter;
-							break;
-						case 0x02: /* pitch slide down - 2xx */
-							channels[chan].periodDelta = note.effectParameter;
-							break;
-						case 0x0a: /* volume slide - Axy */
-							if (note.effectParameter & 0xf0) {
-								/* volume increase by x */
-								channels[chan].volumeDelta = note.effectParameter >> 4;
-							} else {
-								/* volume decrease by y */
-								channels[chan].volumeDelta = -note.effectParameter;
-							}
-							break;
-						case 0x0c: /* volume */
-							if (note.effectParameter > 64) {
-								channels[chan].volume = 64;
-							} else {
-								channels[chan].volume = note.effectParameter;
-							}
-							break;
-						case 0x0f: /* tempo change */
-							if (note.effectParameter == 0) {
-							} else if (note.effectParameter <= 32) {
-								framesPerRow = note.effectParameter;
-							} else {
-								setBpm(note.effectParameter);
-							}
-							break;
-					}
+			}
+			if (note.effect != 0 || note.effectParameter != 0) {
+				channels[chan].volumeDelta = 0; /* new effects cancel volumeDelta */
+				channels[chan].periodDelta = 0; /* new effects cancel periodDelta */
+				switch (note.effect) {
+					case 0x01: /* pitch slide up - 1xx */
+						channels[chan].periodDelta = -note.effectParameter;
+						break;
+					case 0x02: /* pitch slide down - 2xx */
+						channels[chan].periodDelta = note.effectParameter;
+						break;
+					case 0x0a: /* volume slide - Axy */
+						if (note.effectParameter & 0xf0) {
+							/* volume increase by x */
+							channels[chan].volumeDelta = note.effectParameter >> 4;
+						} else {
+							/* volume decrease by y */
+							channels[chan].volumeDelta = -note.effectParameter;
+						}
+						break;
+					case 0x0c: /* volume */
+						if (note.effectParameter > 64) {
+							channels[chan].volume = 64;
+						} else {
+							channels[chan].volume = note.effectParameter;
+						}
+						break;
+					case 0x0f: /* tempo change */
+						if (note.effectParameter == 0) {
+						} else if (note.effectParameter <= 32) {
+							framesPerRow = note.effectParameter;
+						} else {
+							setBpm(note.effectParameter);
+						}
+						break;
 				}
 			}
 		}
