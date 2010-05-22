@@ -219,7 +219,8 @@ function ModPlayer(mod, rate) {
 				ticksSinceStartOfFrame -= ticksPerFrame;
 			}
 			
-			totalOutputLevel = 0;
+			leftOutputLevel = 0;
+			rightOutputLevel = 0;
 			for (var chan = 0; chan < mod.channelCount; chan++) {
 				if (channels[chan].playing) {
 					channels[chan].ticksSinceStartOfSample += ticksPerOutputSample;
@@ -234,13 +235,23 @@ function ModPlayer(mod, rate) {
 						channels[chan].ticksSinceStartOfSample -= channels[chan].ticksPerSample;
 					}
 					if (channels[chan].playing) {
-						var v = mod.data.charCodeAt(channels[chan].sample.startOffset + channels[chan].samplePosition);
-						totalOutputLevel += (((v + 128) & 0xff) - 128) * channels[chan].volume / 64;
+						var rawVol = mod.data.charCodeAt(channels[chan].sample.startOffset + channels[chan].samplePosition);
+						var vol = (((rawVol + 128) & 0xff) - 128) * channels[chan].volume; /* range (-128*64)..(127*64) */
+						if (chan & 3 == 0 || chan & 3 == 3) {
+							leftOutputLevel += vol * 3
+							rightOutputLevel += vol
+						} else {
+							leftOutputLevel += vol
+							rightOutputLevel += vol * 3
+						}
+						/* range of outputlevels is 128*64*2*channelCount */
+						/* (well, it could be more for odd channel counts) */
 					}
 				}
 			}
 			
-			samples[i] = samples[i+1] = totalOutputLevel / (mod.channelCount * 128);
+			samples[i] = leftOutputLevel / (128 * 128 * mod.channelCount);
+			samples[i+1] = rightOutputLevel / (128 * 128 * mod.channelCount);
 			i += 2;
 		}
 		
