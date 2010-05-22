@@ -20,13 +20,14 @@
 			var playing = false;
 			function play() {
 				playing = true;
+				dynamicAudio.write(modPlayer.getSamples(882000));
 				bufferMoreData();
 			}
 			
 			function bufferMoreData() {
 				if (playing) {
-					dynamicAudio.write(modPlayer.getSamples(882000));
-					setTimeout(bufferMoreData, 9900);
+					dynamicAudio.write(modPlayer.getSamples(88200));
+					setTimeout(bufferMoreData, 900);
 				}
 			}
 			

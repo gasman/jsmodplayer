@@ -200,11 +200,12 @@ function ModPlayer(mod, rate) {
 					channels[chan].ticksSinceStartOfSample += ticksPerOutputSample;
 					while (channels[chan].ticksSinceStartOfSample >= channels[chan].ticksPerSample) {
 						channels[chan].samplePosition++;
-						if (channels[chan].samplePosition >= channels[chan].sample.length) {
-							channels[chan].playing = false;
-						} else if (channels[chan].sample.repeatLength > 2 && channels[chan].samplePosition >= channels[chan].sample.repeatOffset + channels[chan].sample.repeatLength) {
+						if (channels[chan].sample.repeatLength > 2 && channels[chan].samplePosition >= channels[chan].sample.repeatOffset + channels[chan].sample.repeatLength) {
 							channels[chan].samplePosition = channels[chan].sample.repeatOffset;
-						}
+						} else if (channels[chan].samplePosition >= channels[chan].sample.length) {
+							channels[chan].playing = false;
+							break;
+						} else 
 						channels[chan].ticksSinceStartOfSample -= channels[chan].ticksPerSample;
 					}
 					if (channels[chan].playing) {
