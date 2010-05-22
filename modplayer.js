@@ -118,8 +118,8 @@ function ModPlayer(mod, rate) {
 			playing: false,
 			sample: null,
 			volume: 0,
-			volumeDelta: 0
-			
+			volumeDelta: 0,
+			periodDelta: 0
 		};
 	}
 	
@@ -139,7 +139,14 @@ function ModPlayer(mod, rate) {
 				}
 				if (note.effect != 0 || note.effectParameter != 0) {
 					channels[chan].volumeDelta = 0; /* new effects cancel volumeDelta */
+					channels[chan].periodDelta = 0; /* new effects cancel periodDelta */
 					switch (note.effect) {
+						case 0x01: /* pitch slide up - 1xx */
+							channels[chan].periodDelta = -note.effectParameter;
+							break;
+						case 0x02: /* pitch slide down - 2xx */
+							channels[chan].periodDelta = note.effectParameter;
+							break;
 						case 0x0a: /* volume slide - Axy */
 							if (note.effectParameter & 0xf0) {
 								/* volume increase by x */
@@ -200,7 +207,7 @@ function ModPlayer(mod, rate) {
 	
 	function doFrame() {
 		currentFrame++;
-		/* apply volume slide before fetching row, because the first frame of a row does NOT
+		/* apply volume/pitch slide before fetching row, because the first frame of a row does NOT
 		have the slide applied */
 		for (var chan = 0; chan < mod.channelCount; chan++) {
 			channels[chan].volume += channels[chan].volumeDelta;
@@ -208,6 +215,12 @@ function ModPlayer(mod, rate) {
 				channels[chan].volume = 64;
 			} else if (channels[chan].volume < 0) {
 				channels[chan].volume = 0;
+			}
+			channels[chan].ticksPerSample += channels[chan].periodDelta * 2;
+			if (channels[chan].ticksPerSample > 4096) {
+				channels[chan].ticksPerSample = 4096;
+			} else if (channels[chan].ticksPerSample < 96) { /* equivalent to period 48, a bit higher than the highest note */
+				channels[chan].ticksPerSample = 96;
 			}
 		}
 		
