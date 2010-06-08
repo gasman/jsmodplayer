@@ -24,7 +24,7 @@
 			function bufferMoreData() {
 				if (playing) {
 					dynamicAudio.write(modPlayer.getSamples(88200));
-					setTimeout(bufferMoreData, 900);
+					setTimeout(bufferMoreData, 100);
 				}
 			}
 			
@@ -71,7 +71,7 @@
 			<li><a href="javascript:loadRemote('mods/mindkick.mod')">Mindkick (Mindfuck / Mentasm)</a></li>
 			<li><a href="javascript:loadRemote('mods/sundance.mod')">Sundance (Purple Motion / Future Crew)</a></li>
 		</ul>
-		<button onclick="stop()">stop</button>
+		<!-- <button onclick="stop()">stop</button> --><p>(refresh the page to stop audio - no proper playback controls yet...)</p>
 		<div id="status"></div>
 		<p>This is a work in progress - not all effects are implemented yet. Sound output is done with Ben Firshman's <a href="http://github.com/bfirsh/dynamicaudio.js">dynamicaudio.js</a> (using Firefox's audio data API, falling back on Flash if not available).</p>
 		<p><a href="http://github.com/gasman/jsmodplayer">source code, on Github</a></p>
